@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post} from '@nestjs/common';
 import { AppService } from './app.service';
 import { MailjetService } from './mailjet/mailjet.service';
 
@@ -14,18 +14,24 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Get('/alert-new')
-  getSendNewAlert(): unknown {
-    return this.mailService.sendNewCryptoAlertEmail();
+  @Post('/alert-new')
+  getSendNewAlert(): Promise<boolean> {
+    const userEmail = 'ab@example.com';
+    const alertDetails = 'Creation new crypto alert';
+    return this.mailService.sendNewCryptoAlertEmail(userEmail, alertDetails);
   }
 
-  @Get('/alert-price')
-  getSendPriceAlert(): unknown {
-    return this.mailService.sendCryptoAlertPriceReachedEmail();
+  @Post('/alert-price')
+  getSendPriceAlert(): Promise<boolean> {
+    const userEmail = 'ab@example.com';
+    const alertDetails = 'Creation new crypto alert';
+    return this.mailService.sendCryptoAlertPriceReachedEmail(userEmail, alertDetails);
   }
 
-  @Get('/alert-delete')
-  getSendDeleteAlert(): unknown {
-    return this.mailService.sendCryptoAlertDeletionEmail();
+  @Post('/alert-delete')
+  getSendDeleteAlert(): Promise<boolean> {
+    const userEmail = 'ab@example.com';
+    const alertDetails = 'Creation new crypto alert';
+    return this.mailService.sendCryptoAlertDeletionEmail(userEmail, alertDetails);
   }
 }

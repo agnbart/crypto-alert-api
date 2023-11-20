@@ -13,7 +13,7 @@ export class MailjetService {
     });
   }
 
-  async sendNewCryptoAlertEmail(): Promise<unknown> {
+  async sendNewCryptoAlertEmail(userEmail: string, alertDetails: string): Promise<boolean> {
     const data: SendEmailV3_1.Body = {
       Messages: [
         {
@@ -22,24 +22,31 @@ export class MailjetService {
           },
           To: [
             {
-              Email: process.env.MAIL_TO,
+              Email: userEmail,
             },
           ],
-          Subject: 'Creation new crypto alert',
+          Subject: alertDetails,
           HTMLPart: '<h3>Dear Client</h3><br />A new alert has been created.',
           TextPart: 'Dear Client, a new alert has been created.',
         },
       ],
     };
 
-    const result: LibraryResponse<SendEmailV3_1.Response> = await this.mailjet
-      .post('send', { version: 'v3.1' })
-      .request(data);
+    try {
+      const result: LibraryResponse<SendEmailV3_1.Response> = await this.mailjet
+        .post('send', { version: 'v3.1' })
+        .request(data);
 
-    return result.body.Messages[0]; // response status
+      // return result.body.Messages[0]; // response status
+      console.log(userEmail);
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   }
 
-  async sendCryptoAlertPriceReachedEmail(): Promise<unknown> {
+  async sendCryptoAlertPriceReachedEmail(userEmail: string, alertDetails: string): Promise<boolean> {
     const data: SendEmailV3_1.Body = {
       Messages: [
         {
@@ -48,25 +55,28 @@ export class MailjetService {
           },
           To: [
             {
-              Email: process.env.MAIL_TO,
+              Email: userEmail,
             },
           ],
-          Subject: 'Price reached alert',
+          Subject: alertDetails,
           HTMLPart:
             '<h3>Dear Client</h3><br />The expected price was obtained.',
           TextPart: 'Dear Client, the expected price was obtained.',
         },
       ],
     };
-
-    const result: LibraryResponse<SendEmailV3_1.Response> = await this.mailjet
-      .post('send', { version: 'v3.1' })
-      .request(data);
-
-    return result.body.Messages[0]; // response status
+    try {
+      const result: LibraryResponse<SendEmailV3_1.Response> = await this.mailjet
+        .post('send', { version: 'v3.1' })
+        .request(data);
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   }
 
-  async sendCryptoAlertDeletionEmail(): Promise<unknown> {
+  async sendCryptoAlertDeletionEmail(userEmail: string, alertDetails: string): Promise<boolean> {
     const data: SendEmailV3_1.Body = {
       Messages: [
         {
@@ -75,20 +85,23 @@ export class MailjetService {
           },
           To: [
             {
-              Email: process.env.MAIL_TO,
+              Email: userEmail,
             },
           ],
-          Subject: 'Deletion mail alert',
+          Subject: alertDetails,
           HTMLPart: '<h3>Dear Client</h3><br />Your alert has been deleted.',
           TextPart: 'Dear Client, your alert has been deleted.',
         },
       ],
     };
-
-    const result: LibraryResponse<SendEmailV3_1.Response> = await this.mailjet
-      .post('send', { version: 'v3.1' })
-      .request(data);
-
-    return result.body.Messages[0]; // response status
+    try {
+      const result: LibraryResponse<SendEmailV3_1.Response> = await this.mailjet
+        .post('send', { version: 'v3.1' })
+        .request(data);
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   }
 }
