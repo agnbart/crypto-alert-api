@@ -38,7 +38,6 @@ export class MailjetService {
         .request(data);
 
       // return result.body.Messages[0]; // response status
-      console.log(userEmail);
       return true;
     } catch (error) {
       console.error(error);
