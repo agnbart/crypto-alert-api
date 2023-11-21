@@ -7,9 +7,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { MailjetModule } from './mailjet/mailjet.module';
 import { MailjetService } from './mailjet/mailjet.service';
 import { MyConfigModule } from './config/config.module';
+import { AlertModule } from './alert/alert.module';
 
 @Module({
-  imports: [CoinMarketCapModule, PrismaModule, MailjetModule, MyConfigModule],
+  imports: [CoinMarketCapModule, PrismaModule, MailjetModule, MyConfigModule, AlertModule],
   controllers: [AppController],
   providers: [AppService, CoinMarketCapService, MailjetService],
 })
