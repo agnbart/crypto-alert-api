@@ -7,10 +7,24 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class AlertService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  create(createAlertDto: CreateAlertDto) {
-    return this.prismaService.alert.create({
+  async create(createAlertDto: CreateAlertDto): Promise<string> {
+    const createdAlert = await this.prismaService.alert.create({
       data: createAlertDto,
     });
+    return createdAlert.id;
+  }
+
+  async findDuplicate(createAlertDto: CreateAlertDto): Promise<boolean> {
+    const duplicate = await this.prismaService.alert.findFirst({
+      where: {
+        email: createAlertDto.email,
+        crypto: createAlertDto.crypto,
+        price: createAlertDto.price,
+        currency: createAlertDto.currency,
+      },
+    });
+
+    return duplicate ? true : false;
   }
 
   findAll() {

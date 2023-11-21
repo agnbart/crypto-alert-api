@@ -15,5 +15,5 @@ model Alert {
   email String
   crypto String
   price Float
-  currancy String
+  currency String
 }

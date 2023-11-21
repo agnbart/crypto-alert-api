@@ -5,5 +5,5 @@ export class AlertEntity implements AlertModel {
     email: string;
     crypto: string;
     price: number;
-    currancy: string;
+    currency: string;
 }

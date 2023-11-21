@@ -6,7 +6,9 @@ import {
   Patch,
   Param,
   Delete,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { AlertService } from './alert.service';
 import { CreateAlertDto } from './dto/create-alert.dto';
 import { UpdateAlertDto } from './dto/update-alert.dto';
@@ -16,8 +18,17 @@ export class AlertController {
   constructor(private readonly alertService: AlertService) {}
 
   @Post()
-  create(@Body() createAlertDto: CreateAlertDto) {
-    return this.alertService.create(createAlertDto);
+  async create(
+    @Body() createAlertDto: CreateAlertDto,
+    @Res() res: Response,
+  ): Promise<Response> {
+    const isDuplicate = await this.alertService.findDuplicate(createAlertDto);
+    if (isDuplicate) {
+      return res.status(400).send('Alert already exist.');
+    } else {
+      const id = await this.alertService.create(createAlertDto);
+      return res.status(201).send(`Alert was created with ID ${id}`);
+    }
   }
 
   @Get()
