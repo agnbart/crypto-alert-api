@@ -16,4 +16,5 @@ model Alert {
   crypto String
   price Float
   currency String
+  @@unique([crypto, currency, email, price])
 }
