@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client, LibraryResponse, SendEmailV3_1 } from 'node-mailjet';
-import * as Mailjet from 'node-mailjet';
 
 @Injectable()
 export class MailjetService {
