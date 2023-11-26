@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client, LibraryResponse, SendEmailV3_1 } from 'node-mailjet';
-import * as Mailjet from 'node-mailjet';
+
+export enum AlertActionEnum {
+  CREATED = 'created',
+  FULFILLED = 'fulfilled',
+  DELETED = 'deleted',
+}
 
 @Injectable()
 export class MailjetService {
@@ -13,21 +18,39 @@ export class MailjetService {
     });
   }
 
-  async sendNewCryptoAlertEmail(userEmail: string, alertDetails: string): Promise<boolean> {
+  async sendNewCryptoAlertEmail(
+    userEmail: string,
+    alertAction: string,
+  ): Promise<boolean> {
+    let subjectAlert = '';
+    let text = '';
+    switch (alertAction) {
+      case AlertActionEnum.CREATED:
+        subjectAlert = 'Alert created';
+        text = 'Your alert has been created';
+        break;
+      case AlertActionEnum.FULFILLED:
+        subjectAlert = 'Alert fulfilled';
+        text = 'Your alert has been fulfilled';
+        break;
+      case AlertActionEnum.DELETED:
+        subjectAlert = 'Alert deleted';
+        text = 'Your alert has been deleted';
+        break;
+    }
     const data: SendEmailV3_1.Body = {
       Messages: [
         {
           From: {
-            Email: process.env.MAIL_FROM,
+            Email: process.env.MJ_MAIL_FROM,
           },
           To: [
             {
               Email: userEmail,
             },
           ],
-          Subject: alertDetails,
-          HTMLPart: '<h3>Dear Client</h3><br />A new alert has been created.',
-          TextPart: 'Dear Client, a new alert has been created.',
+          Subject: subjectAlert,
+          TextPart: text,
         },
       ],
     };
@@ -40,66 +63,7 @@ export class MailjetService {
       // return result.body.Messages[0]; // response status
       return true;
     } catch (error) {
-      console.error(error);
-      return false;
-    }
-  }
-
-  async sendCryptoAlertPriceReachedEmail(userEmail: string, alertDetails: string): Promise<boolean> {
-    const data: SendEmailV3_1.Body = {
-      Messages: [
-        {
-          From: {
-            Email: process.env.MAIL_FROM,
-          },
-          To: [
-            {
-              Email: userEmail,
-            },
-          ],
-          Subject: alertDetails,
-          HTMLPart:
-            '<h3>Dear Client</h3><br />The expected price was obtained.',
-          TextPart: 'Dear Client, the expected price was obtained.',
-        },
-      ],
-    };
-    try {
-      const result: LibraryResponse<SendEmailV3_1.Response> = await this.mailjet
-        .post('send', { version: 'v3.1' })
-        .request(data);
-      return true;
-    } catch (error) {
-      console.error(error);
-      return false;
-    }
-  }
-
-  async sendCryptoAlertDeletionEmail(userEmail: string, alertDetails: string): Promise<boolean> {
-    const data: SendEmailV3_1.Body = {
-      Messages: [
-        {
-          From: {
-            Email: process.env.MAIL_FROM,
-          },
-          To: [
-            {
-              Email: userEmail,
-            },
-          ],
-          Subject: alertDetails,
-          HTMLPart: '<h3>Dear Client</h3><br />Your alert has been deleted.',
-          TextPart: 'Dear Client, your alert has been deleted.',
-        },
-      ],
-    };
-    try {
-      const result: LibraryResponse<SendEmailV3_1.Response> = await this.mailjet
-        .post('send', { version: 'v3.1' })
-        .request(data);
-      return true;
-    } catch (error) {
-      console.error(error);
+      console.error(`Error in senMail: ${error}`);
       return false;
     }
   }
