@@ -17,29 +17,17 @@ import { UpdateAlertDto } from './dto/update-alert.dto';
 export class AlertController {
   constructor(private readonly alertService: AlertService) {}
 
-  // @Post()
-  // async create(
-  //   @Body() createAlertDto: CreateAlertDto,
-  //   @Res() res: Response,
-  // ): Promise<Response> {
-  //   const isDuplicate = await this.alertService.findDuplicate(createAlertDto);
-  //   if (isDuplicate) {
-  //     return res.status(400).send('Alert already exist.');
-  //   } else {
-  //     const id = await this.alertService.create(createAlertDto);
-  //     return res.status(201).send(`Alert was created with ID ${id}`);
-  //   }
-  // }
-
   @Post()
   async create(
     @Body() createAlertDto: CreateAlertDto,
     @Res() res: Response,
   ): Promise<Response> {
-    const id = await this.alertService.create(createAlertDto);
-    if (id)
- return res.status(201).send(`Alert has been created: ${id}`);
-    else return res.status(400).send(`Alert already exist`);
+    const IAlertResponse = await this.alertService.create(createAlertDto);
+    if (IAlertResponse.alertId)
+      return res
+        .status(201)
+        .send(`Alert has been created: ${IAlertResponse.alertId}`);
+    else return res.status(400).send(`Error: ${IAlertResponse.errorMsg}`);
   }
 
   @Get()
