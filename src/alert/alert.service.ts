@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateAlertDto } from './dto/create-alert.dto';
 import { UpdateAlertDto } from './dto/update-alert.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { AlertActionEnum, MailjetService } from 'src/mailjet/mailjet.service';
 
 interface IAlertResponse {
   alertId: string;
@@ -10,7 +11,7 @@ interface IAlertResponse {
 
 @Injectable()
 export class AlertService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService, private readonly mailjetService: MailjetService) {}
 
   async create(createAlertDto: CreateAlertDto): Promise<IAlertResponse> {
     let errorMsg = null;
@@ -21,6 +22,7 @@ export class AlertService {
       })
       .then((createdAlert: any) => {
         createdAlertId = createdAlert.id;
+        this.mailjetService.sendNewCryptoAlertEmail(createAlertDto.email, AlertActionEnum.CREATED);
       })
       .catch((error) => {
         if ((error.code = 'P2002')) {
