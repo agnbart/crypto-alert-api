@@ -57,17 +57,10 @@ export class AlertService {
         crypto: true,
         currency: true,
         price: true,
+        createdAt: true,
       }
     });
-  
-    const alertsWithDate = alerts.map(alert => {
-      return {
-        ...alert,
-        createdAt: new ObjectId(alert.id).getTimestamp()
-      };
-    });
-  
-    return alertsWithDate;
+    return alerts;
   }
 
   update(id: number, updateAlertDto: UpdateAlertDto) {
