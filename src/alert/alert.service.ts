@@ -15,8 +15,10 @@ export class AlertService {
   constructor(private readonly prismaService: PrismaService, private readonly mailjetService: MailjetService) {}
 
   async create(createAlertDto: CreateAlertDto): Promise<IAlertResponse> {
+    createAlertDto.createdAt = new Date();
     let errorMsg = null;
     let createdAlertId = null;
+
     await this.prismaService.alert
       .create({
         data: createAlertDto,
