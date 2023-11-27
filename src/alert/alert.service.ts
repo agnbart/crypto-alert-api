@@ -61,7 +61,7 @@ export class AlertService {
     const alertsWithDate = alerts.map(alert => {
       return {
         ...alert,
-        date: new ObjectId(alert.id).getTimestamp()
+        createdAt: new ObjectId(alert.id).getTimestamp()
       };
     });
   
