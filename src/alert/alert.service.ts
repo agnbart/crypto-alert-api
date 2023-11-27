@@ -67,7 +67,22 @@ export class AlertService {
     return `This action updates a #${id} alert`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} alert`;
+  async remove(id: string): Promise<IAlertResponse> {
+    let errorMsg = null;
+    let deletedAlertId = null;
+
+    await this.prismaService.alert
+    .delete({
+      where: { id: id }
+    })
+    .then((deletedAlert: any) => {
+      deletedAlertId = deletedAlert.id;
+      this.mailjetService.sendNewCryptoAlertEmail(deletedAlert.email, AlertActionEnum.DELETED);
+    })
+    .catch((error) => {
+      errorMsg = 'Error on deleting Alert.';
+    });
+
+    return { alertId: deletedAlertId, errorMsg: errorMsg };
   }
 }
