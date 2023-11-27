@@ -3,6 +3,7 @@ import { CreateAlertDto } from './dto/create-alert.dto';
 import { UpdateAlertDto } from './dto/update-alert.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AlertActionEnum, MailjetService } from 'src/mailjet/mailjet.service';
+import { ObjectId } from 'mongodb';
 
 interface IAlertResponse {
   alertId: string;
@@ -44,8 +45,27 @@ export class AlertService {
     return await this.prismaService.alert.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} alert`;
+  async findOne(email: string) {
+    const alerts = await this.prismaService.alert.findMany({
+      where: {
+        email: email,
+      },
+      select: {
+        id: true,
+        crypto: true,
+        currency: true,
+        price: true,
+      }
+    });
+  
+    const alertsWithDate = alerts.map(alert => {
+      return {
+        ...alert,
+        date: new ObjectId(alert.id).getTimestamp()
+      };
+    });
+  
+    return alertsWithDate;
   }
 
   update(id: number, updateAlertDto: UpdateAlertDto) {
