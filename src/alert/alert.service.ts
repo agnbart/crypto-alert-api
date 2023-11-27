@@ -80,7 +80,7 @@ export class AlertService {
       this.mailjetService.sendNewCryptoAlertEmail(deletedAlert.email, AlertActionEnum.DELETED);
     })
     .catch((error) => {
-      errorMsg = 'Error on deleting Alert.';
+      errorMsg = `Error on deleting Alert: ${error.message}`;
     });
 
     return { alertId: deletedAlertId, errorMsg: errorMsg };
