@@ -46,7 +46,12 @@ export class AlertController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.alertService.remove(+id);
+  async remove(@Param('id') id: string, @Res() res: Response): Promise<Response> {
+    const IAlertResponse = await this.alertService.remove(id);
+    if (IAlertResponse.alertId)
+      return res
+        .status(200)
+        .send(`Alert ${IAlertResponse.alertId} has been removed`);
+    else return res.status(400).send(`Error: ${IAlertResponse.errorMsg}`);
   }
 }
