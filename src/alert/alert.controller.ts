@@ -35,9 +35,9 @@ export class AlertController {
     return this.alertService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.alertService.findOne(+id);
+  @Get(':email')
+  findOne(@Param('email') email: string) {
+    return this.alertService.findOne(email);
   }
 
   @Patch(':id')
