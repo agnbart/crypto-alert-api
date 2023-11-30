@@ -3,10 +3,10 @@ import { AlertService } from './alert.service';
 import { AlertController } from './alert.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { MailjetModule } from 'src/mailjet/mailjet.module';
-import { MailjetService } from 'src/mailjet/mailjet.service';
+import { CoinMarketCapModule } from 'src/coin-market-cap/coin-market-cap.module';
 
 @Module({
-  imports: [PrismaModule, MailjetModule],
+  imports: [PrismaModule, MailjetModule, CoinMarketCapModule],
   controllers: [AlertController],
   providers: [AlertService]
 })

@@ -6,9 +6,10 @@ import { CoinMarketCapModule } from './coin-market-cap/coin-market-cap.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { MyConfigModule } from './config/config.module';
 import { AlertModule } from './alert/alert.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [CoinMarketCapModule, PrismaModule, MyConfigModule, AlertModule],
+  imports: [CoinMarketCapModule, PrismaModule, MyConfigModule, AlertModule, ScheduleModule.forRoot()],
   controllers: [AppController],
   providers: [AppService, CoinMarketCapService],
 })

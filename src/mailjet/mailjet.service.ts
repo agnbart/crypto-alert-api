@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client, LibraryResponse, SendEmailV3_1 } from 'node-mailjet';
 
+
 export enum AlertActionEnum {
   CREATED = 'created',
   FULFILLED = 'fulfilled',
@@ -11,7 +12,9 @@ export enum AlertActionEnum {
 @Injectable()
 export class MailjetService {
   private readonly mailjet: Client;
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService
+    ) {
     this.mailjet = new Client({
       apiKey: this.configService.get<string>('MJ_APIKEY_PUBLIC'),
       apiSecret: this.configService.get<string>('MJ_APIKEY_PRIVATE'),
@@ -54,12 +57,11 @@ export class MailjetService {
         },
       ],
     };
-
+    
     try {
       const result: LibraryResponse<SendEmailV3_1.Response> = await this.mailjet
         .post('send', { version: 'v3.1' })
         .request(data);
-
       // return result.body.Messages[0]; // response status
       return true;
     } catch (error) {

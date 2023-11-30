@@ -3,7 +3,8 @@ import { CreateAlertDto } from './dto/create-alert.dto';
 import { UpdateAlertDto } from './dto/update-alert.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AlertActionEnum, MailjetService } from 'src/mailjet/mailjet.service';
-import { ObjectId } from 'mongodb';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { CoinMarketCapService } from 'src/coin-market-cap/coin-market-cap.service';
 
 interface IAlertResponse {
   alertId: string;
@@ -12,7 +13,11 @@ interface IAlertResponse {
 
 @Injectable()
 export class AlertService {
-  constructor(private readonly prismaService: PrismaService, private readonly mailjetService: MailjetService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly mailjetService: MailjetService,
+    private readonly coinMarketCapService: CoinMarketCapService,
+  ) {}
 
   async create(createAlertDto: CreateAlertDto): Promise<IAlertResponse> {
     createAlertDto.createdAt = new Date();
@@ -25,7 +30,10 @@ export class AlertService {
       })
       .then((createdAlert: any) => {
         createdAlertId = createdAlert.id;
-        this.mailjetService.sendNewCryptoAlertEmail(createAlertDto.email, AlertActionEnum.CREATED);
+        this.mailjetService.sendNewCryptoAlertEmail(
+          createAlertDto.email,
+          AlertActionEnum.CREATED,
+        );
       })
       .catch((error) => {
         if ((error.code = 'P2002')) {
@@ -58,7 +66,7 @@ export class AlertService {
         currency: true,
         price: true,
         createdAt: true,
-      }
+      },
     });
     return alerts;
   }
@@ -72,17 +80,65 @@ export class AlertService {
     let deletedAlertId = null;
 
     await this.prismaService.alert
-    .delete({
-      where: { id: id }
-    })
-    .then((deletedAlert: any) => {
-      deletedAlertId = deletedAlert.id;
-      this.mailjetService.sendNewCryptoAlertEmail(deletedAlert.email, AlertActionEnum.DELETED);
-    })
-    .catch((error) => {
-      errorMsg = `Error on deleting Alert: ${error.message}`;
-    });
+      .delete({
+        where: { id: id },
+      })
+      .then((deletedAlert: any) => {
+        deletedAlertId = deletedAlert.id;
+        this.mailjetService.sendNewCryptoAlertEmail(
+          deletedAlert.email,
+          AlertActionEnum.DELETED,
+        );
+      })
+      .catch((error) => {
+        errorMsg = `Error on deleting Alert: ${error.message}`;
+      });
 
     return { alertId: deletedAlertId, errorMsg: errorMsg };
   }
+
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async fulfilledCronJob() {
+    console.info('Uruchomilem sie po 10s :)');
+    this.test();
+  }
+
+  async test() {
+    const alerts = await this.findAll();
+    const cryptos = [...new Set(alerts.map((alert) => alert.crypto))];
+    console.log('cryptos');
+    console.log(cryptos);
+    const quotes = await this.coinMarketCapService.getCoinDataBySymbols(cryptos);
+    console.log('quotes');
+    console.log(quotes);
+    const monitoringAlerts: MonitoringAlerts[] = alerts.map((alert) => (
+      {
+        crypto: alert.crypto,
+        price: alert.price,
+        email: alert.email
+      }
+      ));
+    console.log('monitoringAlerts')
+    console.log(monitoringAlerts);
+
+    const filteredMonitoringAlerts = monitoringAlerts.filter((alert) => {
+      const quote = quotes.find((q) => q.crypto === alert.crypto);
+      return quote && quote.price > alert.price;
+    });
+    console.log('filteredMonitoringAlerts');
+    console.log(filteredMonitoringAlerts);
+
+    filteredMonitoringAlerts.forEach((alert) => {
+      this.mailjetService.sendNewCryptoAlertEmail(
+        alert.email,
+        AlertActionEnum.FULFILLED,
+      );
+    });
+  }
+}
+
+type MonitoringAlerts = {
+  crypto: string;
+  price: number;
+  email: string;
 }
