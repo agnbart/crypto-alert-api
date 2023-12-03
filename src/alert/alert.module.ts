@@ -5,9 +5,11 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { MailjetModule } from 'src/mailjet/mailjet.module';
 import { CoinMarketCapModule } from 'src/coin-market-cap/coin-market-cap.module';
 
+
 @Module({
   imports: [PrismaModule, MailjetModule, CoinMarketCapModule],
+  exports: [AlertService],
   controllers: [AlertController],
-  providers: [AlertService]
+  providers: [AlertService,]
 })
 export class AlertModule {}

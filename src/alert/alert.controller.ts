@@ -11,7 +11,6 @@ import {
 import { Response } from 'express';
 import { AlertService } from './alert.service';
 import { CreateAlertDto } from './dto/create-alert.dto';
-import { UpdateAlertDto } from './dto/update-alert.dto';
 
 @Controller('alerts')
 export class AlertController {
@@ -38,11 +37,6 @@ export class AlertController {
   @Get(':email')
   findOne(@Param('email') email: string) {
     return this.alertService.findOne(email);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAlertDto: UpdateAlertDto) {
-    return this.alertService.update(+id, updateAlertDto);
   }
 
   @Delete(':id')

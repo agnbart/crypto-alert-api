@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateAlertDto } from './dto/create-alert.dto';
-import { UpdateAlertDto } from './dto/update-alert.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AlertActionEnum, MailjetService } from 'src/mailjet/mailjet.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CoinMarketCapService } from 'src/coin-market-cap/coin-market-cap.service';
+import { AlertDto } from './dto/alert.dto';
 
 interface IAlertResponse {
   alertId: string;
@@ -18,6 +18,8 @@ export class AlertService {
     private readonly mailjetService: MailjetService,
     private readonly coinMarketCapService: CoinMarketCapService,
   ) {}
+
+  private readonly logger = new Logger(AlertService.name);
 
   async create(createAlertDto: CreateAlertDto): Promise<IAlertResponse> {
     createAlertDto.createdAt = new Date();
@@ -51,8 +53,9 @@ export class AlertService {
     return { alertId: createdAlertId, errorMsg: errorMsg };
   }
 
-  async findAll() {
-    return await this.prismaService.alert.findMany();
+  async findAll(): Promise<AlertDto[]> {
+    const alerts = await this.prismaService.alert.findMany();
+    return alerts;
   }
 
   async findOne(email: string) {
@@ -69,10 +72,6 @@ export class AlertService {
       },
     });
     return alerts;
-  }
-
-  update(id: number, updateAlertDto: UpdateAlertDto) {
-    return `This action updates a #${id} alert`;
   }
 
   async remove(id: string): Promise<IAlertResponse> {
@@ -97,20 +96,16 @@ export class AlertService {
     return { alertId: deletedAlertId, errorMsg: errorMsg };
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
-  async fulfilledCronJob() {
-    console.info('Uruchomilem sie po 10s :)');
-    this.test();
-  }
+  // @Cron(CronExpression.EVERY_10_SECONDS)
+  // async fulfilledCronJob() {
+  //   console.info('Uruchomilem sie po 10s :)');
+  //   this.test();
+  // }
 
   async test() {
     const alerts = await this.findAll();
     const cryptos = [...new Set(alerts.map((alert) => alert.crypto))];
-    console.log('cryptos');
-    console.log(cryptos);
     const quotes = await this.coinMarketCapService.getCoinDataBySymbols(cryptos);
-    console.log('quotes');
-    console.log(quotes);
     const monitoringAlerts: MonitoringAlerts[] = alerts.map((alert) => (
       {
         crypto: alert.crypto,
@@ -118,15 +113,12 @@ export class AlertService {
         email: alert.email
       }
       ));
-    console.log('monitoringAlerts')
-    console.log(monitoringAlerts);
 
     const filteredMonitoringAlerts = monitoringAlerts.filter((alert) => {
       const quote = quotes.find((q) => q.crypto === alert.crypto);
       return quote && quote.price > alert.price;
     });
-    console.log('filteredMonitoringAlerts');
-    console.log(filteredMonitoringAlerts);
+    this.logger.debug('filteredMonitoringAlerts');
 
     filteredMonitoringAlerts.forEach((alert) => {
       this.mailjetService.sendNewCryptoAlertEmail(
