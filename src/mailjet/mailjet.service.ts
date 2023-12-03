@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client, LibraryResponse, SendEmailV3_1 } from 'node-mailjet';
-
 
 export enum AlertActionEnum {
   CREATED = 'created',
@@ -11,10 +10,10 @@ export enum AlertActionEnum {
 
 @Injectable()
 export class MailjetService {
+  private readonly logger = new Logger(MailjetService.name);
   private readonly mailjet: Client;
-  constructor(
-    private configService: ConfigService
-    ) {
+
+  constructor(private configService: ConfigService) {
     this.mailjet = new Client({
       apiKey: this.configService.get<string>('MJ_APIKEY_PUBLIC'),
       apiSecret: this.configService.get<string>('MJ_APIKEY_PRIVATE'),
@@ -24,6 +23,7 @@ export class MailjetService {
   async sendNewCryptoAlertEmail(
     userEmail: string,
     alertAction: string,
+    isMockService: boolean = false,
   ): Promise<boolean> {
     let subjectAlert = '';
     let text = '';
@@ -57,15 +57,13 @@ export class MailjetService {
         },
       ],
     };
-    
+
     try {
-      const result: LibraryResponse<SendEmailV3_1.Response> = await this.mailjet
-        .post('send', { version: 'v3.1' })
-        .request(data);
-      // return result.body.Messages[0]; // response status
+      if (isMockService) this.logger.warn('Mock is used to send emails!');
+      else await this.mailjet.post('send', { version: 'v3.1' }).request(data);
       return true;
     } catch (error) {
-      console.error(`Error in senMail: ${error}`);
+      console.error(`Error in sendMail: ${error}`);
       return false;
     }
   }

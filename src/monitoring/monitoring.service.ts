@@ -3,8 +3,7 @@ import { Cron, CronExpression, Timeout } from '@nestjs/schedule';
 import { AlertService } from 'src/alert/alert.service';
 import { AlertDto } from 'src/alert/dto/alert.dto';
 import { CoinMarketCapService } from 'src/coin-market-cap/coin-market-cap.service';
-import { MailjetService } from 'src/mailjet/mailjet.service';
-import { AlertActionEnum } from 'src/mailjet/mailjet.service';
+import { AlertActionEnum , MailjetService} from 'src/mailjet/mailjet.service';
 
 @Injectable()
 export class MonitoringService {
@@ -16,6 +15,7 @@ export class MonitoringService {
   constructor(
     private readonly alertService: AlertService,
     private readonly coinMarketCapService: CoinMarketCapService,
+    private readonly mailjetService: MailjetService,
   ) {}
 
   @Timeout(5000)
@@ -61,13 +61,12 @@ export class MonitoringService {
       );
 
       filteredMonitoringAlerts.forEach((alert) => {
-        // TODO:add mock for sending mail
-        
-        const isSend = true;
-        // const isSend = this.mailjetService.sendNewCryptoAlertEmail(
-        //   alert.email,
-        //   AlertActionEnum.FULFILLED,
-        // );
+      
+        const isSend = this.mailjetService.sendNewCryptoAlertEmail(
+          alert.email,
+          AlertActionEnum.FULFILLED,
+          !!process.env.MJ_MOCK,
+        );
         if (isSend) {
           this.logger.log(`Sending mail about meeting the alert conditions: ${alert.email}`);
         }

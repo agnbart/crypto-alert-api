@@ -39,11 +39,12 @@ export class AlertService {
       .then((createdAlert: AlertDto) => {
         createdAlertId = createdAlert.id;
         this.alerts.push(createdAlert);
-        // TODO: add mock to sending mail
-        // this.mailjetService.sendNewCryptoAlertEmail(
-        //   createAlertDto.email,
-        //   AlertActionEnum.CREATED,
-        // );
+
+        this.mailjetService.sendNewCryptoAlertEmail(
+          createAlertDto.email,
+          AlertActionEnum.CREATED,
+          !!process.env.MJ_MOCK,
+        );
       })
       .catch((error) => {
         if ((error.code = 'P2002')) {
@@ -99,11 +100,11 @@ export class AlertService {
           `Sending mail about deleting the alert: ${deletedAlertId}`,
         );
 
-        // TODO add mock to sending mail
-        // this.mailjetService.sendNewCryptoAlertEmail(
-        //   deletedAlert.email,
-        //   AlertActionEnum.DELETED,
-        // );
+        this.mailjetService.sendNewCryptoAlertEmail(
+          deletedAlert.email,
+          AlertActionEnum.DELETED,
+          !!process.env.MJ_MOCK,
+        );
       })
       .catch((error) => {
         errorMsg = `Error on deleting Alert: ${error.message}`;
