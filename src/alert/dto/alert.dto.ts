@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateAlertDto } from './create-alert.dto';
+import { AlertEntity } from '../entities/alert.entity';
 
-export class AlertDto extends PartialType(CreateAlertDto) {}
+export class AlertDto extends PartialType(AlertEntity) {}
