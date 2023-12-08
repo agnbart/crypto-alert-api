@@ -12,19 +12,19 @@ interface IAlertResponse {
 @Injectable()
 export class AlertService {
   private readonly logger = new Logger(AlertService.name);
-  private alerts: AlertDto[] = [];
+  private cachedAlerts: AlertDto[] = [];
 
   constructor(
     private readonly prismaService: PrismaService,
     private readonly mailjetService: MailjetService,
   ) {}
 
-  setAlerts(value: AlertDto[]) {
-    this.alerts = value;
+  setCachedAlerts(value: AlertDto[]) {
+    this.cachedAlerts = value;
   }
 
-  getAlerts(): AlertDto[] {
-    return this.alerts;
+  getCachedAlerts(): AlertDto[] {
+    return this.cachedAlerts;
   }
 
   async create(createAlertDto: CreateAlertDto): Promise<IAlertResponse> {
@@ -38,7 +38,7 @@ export class AlertService {
       })
       .then((createdAlert: AlertDto) => {
         createdAlertId = createdAlert.id;
-        this.alerts.push(createdAlert);
+        this.cachedAlerts.push(createdAlert);
 
         this.mailjetService.sendNewCryptoAlertEmail(
           createAlertDto.email,
@@ -93,7 +93,7 @@ export class AlertService {
       })
       .then((deletedAlert: any) => {
         deletedAlertId = deletedAlert.id;
-        this.alerts = this.alerts.filter(
+        this.cachedAlerts = this.cachedAlerts.filter(
           (alert) => alert.id !== deletedAlertId,
         );
         this.logger.log(
