@@ -3,6 +3,6 @@ import { MailjetService } from './mailjet.service';
 
 @Module({
   providers: [MailjetService],
-  exports: [MailjetService]
+  exports: [MailjetService],
 })
 export class MailjetModule {}

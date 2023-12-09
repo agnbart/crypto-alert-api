@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateAlertDto } from './dto/create-alert.dto';
-import { UpdateAlertDto } from './dto/update-alert.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AlertActionEnum, MailjetService } from 'src/mailjet/mailjet.service';
-import { ObjectId } from 'mongodb';
+import { AlertDto } from './dto/alert.dto';
 
 interface IAlertResponse {
   alertId: string;
@@ -12,7 +11,21 @@ interface IAlertResponse {
 
 @Injectable()
 export class AlertService {
-  constructor(private readonly prismaService: PrismaService, private readonly mailjetService: MailjetService) {}
+  private readonly logger = new Logger(AlertService.name);
+  private cachedAlerts: AlertDto[] = [];
+
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly mailjetService: MailjetService,
+  ) {}
+
+  setCachedAlerts(value: AlertDto[]) {
+    this.cachedAlerts = value;
+  }
+
+  getCachedAlerts(): AlertDto[] {
+    return this.cachedAlerts;
+  }
 
   async create(createAlertDto: CreateAlertDto): Promise<IAlertResponse> {
     createAlertDto.createdAt = new Date();
@@ -23,9 +36,15 @@ export class AlertService {
       .create({
         data: createAlertDto,
       })
-      .then((createdAlert: any) => {
+      .then((createdAlert: AlertDto) => {
         createdAlertId = createdAlert.id;
-        this.mailjetService.sendNewCryptoAlertEmail(createAlertDto.email, AlertActionEnum.CREATED);
+        this.cachedAlerts.push(createdAlert);
+
+        this.mailjetService.sendNewCryptoAlertEmail(
+          createAlertDto.email,
+          AlertActionEnum.CREATED,
+          !!process.env.MJ_MOCK,
+        );
       })
       .catch((error) => {
         if ((error.code = 'P2002')) {
@@ -43,8 +62,9 @@ export class AlertService {
     return { alertId: createdAlertId, errorMsg: errorMsg };
   }
 
-  async findAll() {
-    return await this.prismaService.alert.findMany();
+  async findAll(): Promise<AlertDto[]> {
+    const alerts = await this.prismaService.alert.findMany();
+    return alerts;
   }
 
   async findOne(email: string) {
@@ -58,13 +78,9 @@ export class AlertService {
         currency: true,
         price: true,
         createdAt: true,
-      }
+      },
     });
     return alerts;
-  }
-
-  update(id: number, updateAlertDto: UpdateAlertDto) {
-    return `This action updates a #${id} alert`;
   }
 
   async remove(id: string): Promise<IAlertResponse> {
@@ -72,16 +88,27 @@ export class AlertService {
     let deletedAlertId = null;
 
     await this.prismaService.alert
-    .delete({
-      where: { id: id }
-    })
-    .then((deletedAlert: any) => {
-      deletedAlertId = deletedAlert.id;
-      this.mailjetService.sendNewCryptoAlertEmail(deletedAlert.email, AlertActionEnum.DELETED);
-    })
-    .catch((error) => {
-      errorMsg = `Error on deleting Alert: ${error.message}`;
-    });
+      .delete({
+        where: { id: id },
+      })
+      .then((deletedAlert: any) => {
+        deletedAlertId = deletedAlert.id;
+        this.cachedAlerts = this.cachedAlerts.filter(
+          (alert) => alert.id !== deletedAlertId,
+        );
+        this.logger.log(
+          `Sending mail about deleting the alert: ${deletedAlertId}`,
+        );
+
+        this.mailjetService.sendNewCryptoAlertEmail(
+          deletedAlert.email,
+          AlertActionEnum.DELETED,
+          !!process.env.MJ_MOCK,
+        );
+      })
+      .catch((error) => {
+        errorMsg = `Error on deleting Alert: ${error.message}`;
+      });
 
     return { alertId: deletedAlertId, errorMsg: errorMsg };
   }
